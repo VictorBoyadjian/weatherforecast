@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, LocateFixed } from "lucide-react";
 import { useWeather } from "../../hooks/useWeather";
 import type { GeocodingResult } from "../../lib/types/weather";
 
 export default function CitySearch() {
-  const { searchForCities, selectCity } = useWeather();
+  const { searchForCities, selectCity, locateUser, locating } = useWeather();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GeocodingResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -65,6 +65,19 @@ export default function CitySearch() {
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => results.length > 0 && setIsOpen(true)}
         />
+        <button
+          type="button"
+          onClick={locateUser}
+          disabled={locating}
+          className="text-gray-400 hover:text-white transition-colors shrink-0 disabled:opacity-50"
+          title="Utiliser ma position"
+        >
+          {locating ? (
+            <Loader2 className="animate-spin" size={16} />
+          ) : (
+            <LocateFixed size={16} />
+          )}
+        </button>
       </div>
       {isOpen && (
         <div className="absolute top-full mt-1 w-full bg-gray-800 rounded-lg shadow-xl border border-gray-700 z-50 overflow-hidden">
