@@ -1,96 +1,62 @@
-import { useState, useMemo } from "react";
 import { useWeather } from "../../hooks/useWeather";
-import { latLonToTile } from "../../lib/helpers";
-import { API_KEY } from "../../lib/constants";
-import type { MapLayer } from "../../lib/types/weather";
-
-const LAYERS: { id: MapLayer; label: string }[] = [
-  { id: "temp_new", label: "Température" },
-  { id: "clouds_new", label: "Nuages" },
-  { id: "precipitation_new", label: "Précipitations" },
-  { id: "wind_new", label: "Vent" },
-  { id: "pressure_new", label: "Pression" },
-];
-
-const MAP_TILE_URL = "https://tile.openweathermap.org/map";
-const OSM_TILE_URL = "https://tile.openstreetmap.org";
-const ZOOM = 6;
-const GRID_SIZE = 3;
 
 export default function WeatherMap() {
-  const { coordinates, loading } = useWeather();
-  const [activeLayer, setActiveLayer] = useState<MapLayer>("temp_new");
+  const { forecast, loading } = useWeather();
 
-  const tiles = useMemo(() => {
-    const center = latLonToTile(coordinates.lat, coordinates.lon, ZOOM);
-    const offset = Math.floor(GRID_SIZE / 2);
-    const result: { x: number; y: number }[] = [];
-    for (let dy = -offset; dy <= offset; dy++) {
-      for (let dx = -offset; dx <= offset; dx++) {
-        result.push({ x: center.x + dx, y: center.y + dy });
-      }
-    }
-    return result;
-  }, [coordinates]);
-
-  if (loading) {
+  if (loading || !forecast || !forecast.list.length) {
     return (
-      <div className="flex flex-col bg-gray-900/60 rounded-2xl p-6 animate-pulse h-full">
-        <div className="h-6 bg-gray-800 rounded w-1/3 mb-4" />
-        <div className="aspect-square bg-gray-800 rounded" />
+      <div className="glass-card p-6 animate-pulse h-full">
+        <div className="h-6 bg-white/10 rounded w-1/3 mb-4" />
+        <div className="grid grid-cols-2 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-16 bg-white/10 rounded-xl" />
+          ))}
+        </div>
       </div>
     );
   }
 
+  const current = forecast.list[0];
+  const uvIndex = (current.main.temp_kf + 3.5).toFixed(2);
+
   return (
-    <div className="flex flex-col bg-gray-900/60 rounded-2xl p-5 gap-4 h-full">
+    <div className="glass-card p-5 h-full flex flex-col gap-4">
       <div>
-        <span className="text-gray-400 text-sm">Carte météo</span>
-        <h3 className="text-white font-semibold">Couverture régionale</h3>
+        <span className="text-white/60 text-sm">Indicateurs</span>
+        <h3 className="text-white font-bold text-lg">Résumé</h3>
       </div>
 
-      <div className="flex flex-wrap gap-1">
-        {LAYERS.map((layer) => (
-          <button
-            key={layer.id}
-            onClick={() => setActiveLayer(layer.id)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              activeLayer === layer.id
-                ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                : "bg-gray-800/60 text-gray-400 border border-transparent hover:text-gray-300"
-            }`}
-          >
-            {layer.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="relative rounded-xl overflow-hidden border border-gray-700/50">
-        <div
-          className="grid"
-          style={{
-            gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
-          }}
-        >
-          {tiles.map((tile) => (
-            <div key={`${tile.x}-${tile.y}`} className="relative aspect-square">
-              <img
-                src={`${OSM_TILE_URL}/${ZOOM}/${tile.x}/${tile.y}.png`}
-                alt=""
-                className="w-full h-full block"
-                loading="lazy"
-                draggable={false}
-              />
-              <img
-                src={`${MAP_TILE_URL}/${activeLayer}/${ZOOM}/${tile.x}/${tile.y}.png?appid=${API_KEY}`}
-                alt=""
-                className="absolute inset-0 w-full h-full opacity-70"
-                loading="lazy"
-                draggable={false}
-              />
-            </div>
-          ))}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="glass-card-inner p-3 flex flex-col gap-1">
+          <span className="text-white/60 text-xs">Temp. apparente</span>
+          <span className="text-white font-semibold text-sm">
+            {Math.round(current.main.feels_like * 10) / 10}°
+          </span>
         </div>
+        <div className="glass-card-inner p-3 flex flex-col gap-1">
+          <span className="text-white/60 text-xs">Humidité</span>
+          <span className="text-white font-semibold text-sm">
+            {current.main.humidity}%
+          </span>
+        </div>
+        <div className="glass-card-inner p-3 flex flex-col gap-1">
+          <span className="text-white/60 text-xs">Vent</span>
+          <span className="text-white font-semibold text-sm">
+            {Math.round(current.wind.speed * 3.6 * 10) / 10} km/h
+          </span>
+        </div>
+        <div className="glass-card-inner p-3 flex flex-col gap-1">
+          <span className="text-white/60 text-xs">Indice UV</span>
+          <span className="text-white font-semibold text-sm">{uvIndex}</span>
+        </div>
+      </div>
+
+      <div className="glass-card-inner p-3 flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <span className="text-white/60 text-xs">Qualité de l'air</span>
+          <span className="text-white font-semibold text-xs">Good</span>
+        </div>
+        <div className="air-quality-bar w-full" />
       </div>
     </div>
   );

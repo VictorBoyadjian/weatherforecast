@@ -1,7 +1,7 @@
 import { LineChart } from "@mui/x-charts/LineChart";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
-const darkTheme = createTheme({
+const blueTheme = createTheme({
   palette: { mode: "dark" },
 });
 
@@ -14,14 +14,18 @@ type ChartSeries = {
 type WeatherChartProps = {
   hours: string[];
   series: ChartSeries[];
+  title?: string;
 };
 
-export default function WeatherChart({ hours, series }: WeatherChartProps) {
+export default function WeatherChart({ hours, series, title }: WeatherChartProps) {
   if (!hours.length) return null;
 
   return (
-    <ThemeProvider theme={darkTheme}>
+    <ThemeProvider theme={blueTheme}>
       <div className="w-full">
+        {title && (
+          <p className="text-white/50 text-xs mb-1 ml-2">{title}</p>
+        )}
         <LineChart
           xAxis={[
             {
@@ -34,15 +38,17 @@ export default function WeatherChart({ hours, series }: WeatherChartProps) {
             label: s.label,
             color: s.color,
             area: true,
-            showMark: true,
+            showMark: false,
+            curve: "natural",
           }))}
-          height={260}
-          margin={{ left: 50, right: 20, top: 40, bottom: 30 }}
+          height={220}
+          margin={{ left: 50, right: 20, top: 20, bottom: 30 }}
           sx={{
-            ".MuiAreaElement-root": { fillOpacity: 0.08 },
+            ".MuiAreaElement-root": { fillOpacity: 0.06 },
             ".MuiLineElement-root": { strokeWidth: 2.5 },
-            ".MuiMarkElement-root": { scale: "0.8" },
+            ".MuiChartsGrid-line": { stroke: "rgba(255,255,255,0.05)" },
           }}
+          grid={{ horizontal: true }}
         />
       </div>
     </ThemeProvider>

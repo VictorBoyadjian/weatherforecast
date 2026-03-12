@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, Loader2, LocateFixed } from "lucide-react";
+import { Search, Loader2, MapPin } from "lucide-react";
 import { useWeather } from "../../hooks/useWeather";
 import type { GeocodingResult } from "../../lib/types/weather";
 
 export default function CitySearch() {
-  const { searchForCities, selectCity, locateUser, locating } = useWeather();
+  const { searchForCities, selectCity, locateUser, locating, cityName } = useWeather();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GeocodingResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -50,41 +50,52 @@ export default function CitySearch() {
   }
 
   return (
-    <div ref={containerRef} className="relative">
-      <div className="flex items-center bg-gray-800 rounded-lg px-3 border border-gray-700 focus-within:border-gray-500 transition-colors">
+    <div ref={containerRef} className="relative flex items-center gap-3">
+      <div className="flex-1 flex items-center glass-card px-4 py-2.5 rounded-full">
         {searching ? (
-          <Loader2 className="text-gray-400 shrink-0 animate-spin" size={16} />
+          <Loader2 className="text-white/60 shrink-0 animate-spin" size={18} />
         ) : (
-          <Search className="text-gray-400 shrink-0" size={16} />
+          <Search className="text-white/60 shrink-0" size={18} />
         )}
         <input
           type="text"
-          className="bg-transparent text-white text-sm px-2 py-2 outline-none w-52 placeholder:text-gray-500"
-          placeholder="Rechercher une ville..."
+          className="bg-transparent text-white text-sm px-3 py-0.5 outline-none flex-1 placeholder:text-white/50"
+          placeholder={cityName || "Rechercher une ville..."}
           value={query}
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => results.length > 0 && setIsOpen(true)}
         />
-        <button
-          type="button"
-          onClick={locateUser}
-          disabled={locating}
-          className="text-gray-400 hover:text-white transition-colors shrink-0 disabled:opacity-50"
-          title="Utiliser ma position"
-        >
-          {locating ? (
-            <Loader2 className="animate-spin" size={16} />
-          ) : (
-            <LocateFixed size={16} />
-          )}
-        </button>
       </div>
+      <button
+        type="button"
+        onClick={() => {
+          if (query.length >= 2) {
+            handleChange(query);
+          }
+        }}
+        className="bg-gray-900/80 text-white px-5 py-2.5 rounded-full text-sm font-medium hover:bg-gray-900 transition-colors border border-white/10 whitespace-nowrap"
+      >
+        Rechercher
+      </button>
+      <button
+        type="button"
+        onClick={locateUser}
+        disabled={locating}
+        className="flex items-center gap-2 bg-gray-900/80 text-white px-5 py-2.5 rounded-full text-sm font-medium hover:bg-gray-900 transition-colors border border-white/10 disabled:opacity-50 whitespace-nowrap"
+      >
+        {locating ? (
+          <Loader2 className="animate-spin" size={16} />
+        ) : (
+          <MapPin size={16} className="text-red-400" />
+        )}
+        Ma position
+      </button>
       {isOpen && (
-        <div className="absolute top-full mt-1 w-full bg-gray-800 rounded-lg shadow-xl border border-gray-700 z-50 overflow-hidden">
+        <div className="absolute top-full mt-2 left-0 right-0 glass-card shadow-xl z-50 overflow-hidden rounded-xl">
           {results.map((result, index) => (
             <button
               key={`${result.lat}-${result.lon}-${index}`}
-              className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors flex items-center gap-2"
+              className="w-full text-left px-4 py-2.5 text-sm text-white/80 hover:bg-white/10 hover:text-white transition-colors flex items-center gap-2"
               onClick={() => handleSelect(result)}
             >
               <span>
